@@ -27,7 +27,7 @@ const getIPWhitelist = () => {
 // Middleware IP Whitelist
 const checkIPWhitelist = (req, res, next) => {
     const ipWhitelist = getIPWhitelist();
-    const clientIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress.replace('::ffff:', '');
+    const clientIP = req.socket.remoteAddress.replace('::ffff:', '');
 
     if (ipWhitelist.includes(clientIP)) {
         next();
