@@ -44,7 +44,7 @@ app.use(checkIPWhitelist);
 
 // Rute untuk memulai MTProxy
 app.post('/start', (req, res) => {
-    exec('systemctl start mtproxy', (error, stdout, stderr) => {
+    exec('systemctl start MTProxy', (error, stdout, stderr) => {
         if (error) {
             return res.status(500).json({ success: false, message: stderr.trim() });
         }
@@ -54,7 +54,7 @@ app.post('/start', (req, res) => {
 
 // Rute untuk menghentikan MTProxy
 app.post('/stop', (req, res) => {
-    exec('systemctl stop mtproxy', (error, stdout, stderr) => {
+    exec('systemctl stop MTProxy', (error, stdout, stderr) => {
         if (error) {
             return res.status(500).json({ success: false, message: stderr.trim() });
         }
@@ -64,21 +64,28 @@ app.post('/stop', (req, res) => {
 
 // Rute untuk mengecek status MTProxy
 app.get('/status', (req, res) => {
-    exec('systemctl status mtproxy', (error, stdout, stderr) => {
+    exec('systemctl is-active MTProxy', (error, stdout) => {
         if (error) {
-            return res.status(500).json({ success: false, message: stderr.trim() });
+            return res.status(500).json({
+                success: false,
+                message: 'Service is not running',
+                details: error.message,
+            });
         }
-        res.json({ success: true, message: 'Status retrieved', output: stdout.trim() });
-    });
-});
 
-// Rute untuk mendapatkan statistik MTProxy
-app.get('/stats', (req, res) => {
-    exec('curl http://127.0.0.1:2398/stats', (error, stdout, stderr) => {
-        if (error) {
-            return res.status(500).json({ success: false, message: stderr.trim() });
+        if (stdout.trim() === 'active') {
+            res.json({
+                success: true,
+                message: 'Service is running',
+                details: stdout.trim(),
+            });
+        } else {
+            res.json({
+                success: false,
+                message: 'Service is not running',
+                details: stdout.trim(),
+            });
         }
-        res.json({ success: true, message: 'Statistics retrieved', data: JSON.parse(stdout.trim()) });
     });
 });
 
