@@ -62,6 +62,16 @@ app.post('/stop', (req, res) => {
     });
 });
 
+// Rute untuk Reboot VPS
+app.post('/reboot', (req, res) => {
+    exec('reboot', (error, stdout, stderr) => {
+        if (error) {
+            return res.status(500).json({ success: false, message: stderr.trim() });
+        }
+        res.json({ success: true, message: 'Server Reboot Success', output: stdout.trim() });
+    });
+});
+
 // Rute untuk mengecek status MTProxy
 app.get('/status', (req, res) => {
     exec('systemctl is-active MTProxy', (error, stdout) => {
