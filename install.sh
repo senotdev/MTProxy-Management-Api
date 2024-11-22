@@ -1,9 +1,8 @@
 #!/bin/bash
 
-# Skrip lengkap untuk setup MTProxy dengan systemd service dan Management API
+# Skrip lengkap untuk setup MTProxy dengan PM2 untuk Node.js Management API
 
 SERVICE_PATH="/etc/systemd/system/MTProxy.service"
-NODEAPI_SERVICE_PATH="/etc/systemd/system/nodeapi.service"
 WORKING_DIR="/opt/MTProxy"
 EXECUTABLE="$WORKING_DIR/mtproto-proxy"
 PORT="8888"
@@ -20,6 +19,14 @@ sudo DEBIAN_FRONTEND=noninteractive apt install -y git curl build-essential libs
 
 if [ $? -ne 0 ]; then
     echo "Gagal menginstal dependensi. Periksa kesalahan dan coba lagi."
+    exit 1
+fi
+
+echo "Menginstal PM2..."
+sudo npm install -g pm2
+
+if [ $? -ne 0 ]; then
+    echo "Gagal menginstal PM2. Periksa koneksi internet."
     exit 1
 fi
 
@@ -100,7 +107,24 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "Menulis file service untuk MTProxy di $SERVICE_PATH..."
+echo "Menambahkan aplikasi Node.js ke PM2 dengan watch mode..."
+sudo pm2 start /opt/nodeapi/index.js --name "nodeapi" --env production --watch --watch-delay 1000 --ignore-watch "node_modules"
+
+if [ $? -ne 0 ]; then
+    echo "Gagal menambahkan aplikasi Node.js ke PM2."
+    exit 1
+fi
+
+echo "Menjadikan aplikasi Node.js berjalan otomatis dengan PM2..."
+sudo pm2 save
+sudo pm2 startup
+
+if [ $? -ne 0 ]; then
+    echo "Gagal mengatur PM2 untuk berjalan otomatis."
+    exit 1
+fi
+
+echo "Menulis file service di $SERVICE_PATH..."
 sudo bash -c "cat > $SERVICE_PATH" <<EOL
 [Unit]
 Description=MTProxy
@@ -116,28 +140,6 @@ Restart=on-failure
 WantedBy=multi-user.target
 EOL
 
-echo "Menulis file service untuk Node.js Management API di $NODEAPI_SERVICE_PATH..."
-sudo bash -c "cat > $NODEAPI_SERVICE_PATH" <<EOL
-[Unit]
-Description=My Node.js App
-After=network.target
-
-[Service]
-Environment=NODE_ENV=production
-WorkingDirectory=/opt/nodeapi
-ExecStart=/usr/bin/node /opt/nodeapi/index.js
-Restart=always
-User=nobody
-Group=nogroup
-EnvironmentFile=/opt/nodeapi/.env
-StandardOutput=syslog
-StandardError=syslog
-SyslogIdentifier=nodeapi
-
-[Install]
-WantedBy=multi-user.target
-EOL
-
 echo "Reloading systemd daemon..."
 sudo systemctl daemon-reload
 
@@ -145,9 +147,6 @@ echo "Mengaktifkan dan memulai service MTProxy..."
 sudo systemctl enable MTProxy
 sudo systemctl start MTProxy
 
-echo "Mengaktifkan dan memulai service Node.js Management API..."
-sudo systemctl enable nodeapi
-sudo systemctl start nodeapi
-
-echo "Setup selesai. MTProxy dan Node.js Management API telah berjalan."
-echo "Periksa status dengan: sudo systemctl status MTProxy dan sudo systemctl status nodeapi"
+echo "Setup selesai. MTProxy telah berjalan."
+echo "Node.js Management API telah dijalankan menggunakan PM2 dengan watch mode."
+echo "Periksa status dengan: sudo pm2 list dan sudo systemctl status MTProxy"
