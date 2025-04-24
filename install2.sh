@@ -13,9 +13,8 @@ SECRET_FILE="proxy-secret"
 SECRET=""
 WHITELIST_FILE="$NODEAPI_DIR/whitelist.txt"
 
-# 1. Prompt user memasukkan IP whitelist
 echo -n "Masukkan IP yang ingin di-whitelist (pisah spasi untuk beberapa IP): "
-read -r IP_LIST
+read -r IP_LIST < /dev/tty
 
 echo "Memperbarui daftar paket..."
 sudo apt update -y
