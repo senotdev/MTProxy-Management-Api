@@ -81,6 +81,14 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+#echo "Membuat secret untuk MTProxy..."
+#SECRET=$(head -c 16 /dev/urandom | xxd -ps)
+
+#if [ -z "$SECRET" ]; then
+#    echo "Gagal membuat secret."
+#    exit 1
+#fi
+
 echo "Secret berhasil dibuat: $SECRET"
 echo "$SECRET" > proxy-secret.txt
 
