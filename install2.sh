@@ -16,6 +16,14 @@ WHITELIST_FILE="$NODEAPI_DIR/whitelist.txt"
 echo -n "Masukkan IP yang ingin di-whitelist (pisah spasi untuk beberapa IP): "
 read -r IP_LIST < /dev/tty
 
+echo -n "Masukkan SECRET untuk MTProxy (32 karakter hex): "
+read -r SECRET < /dev/tty
+
+if [ -z "$SECRET" ]; then
+    echo "SECRET tidak boleh kosong."
+    exit 1
+fi
+
 echo "Memperbarui daftar paket..."
 sudo apt update -y
 
@@ -70,14 +78,6 @@ curl -s https://core.telegram.org/getProxyConfig -o proxy-multi.conf
 
 if [ $? -ne 0 ]; then
     echo "Gagal mengunduh proxy-multi.conf. Periksa koneksi internet."
-    exit 1
-fi
-
-echo "Membuat secret untuk MTProxy..."
-SECRET=$(head -c 16 /dev/urandom | xxd -ps)
-
-if [ -z "$SECRET" ]; then
-    echo "Gagal membuat secret."
     exit 1
 fi
 
