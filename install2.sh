@@ -23,6 +23,7 @@ if [ -z "$SECRET" ]; then
     echo "SECRET tidak boleh kosong."
     exit 1
 fi
+echo "Secret : $SECRET"
 
 echo "Memperbarui daftar paket..."
 sudo apt update -y
@@ -89,7 +90,7 @@ fi
 #    exit 1
 #fi
 
-echo "Secret berhasil dibuat: $SECRET"
+
 echo "$SECRET" > proxy-secret.txt
 
 echo "Memastikan direktori tujuan /opt/MTProxy ada..."
